@@ -2,14 +2,18 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
+	"com.github.gscampanario/mambu-assessment-test/config"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-// expose Inits all endpoints for the controller package
+// Expose Inits all endpoints for the controller package
 func Expose(ctx context.Context) {
+	cfg := config.Get()
+
 	r := gin.Default()
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
@@ -19,7 +23,7 @@ func Expose(ctx context.Context) {
 	})
 
 	// TODO: Get logger level and server port from config file using viper.
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(fmt.Sprintf(":%s", cfg.Server.Port)); err != nil {
 		logger.Error("[controller.expose] Failed to run server", zap.Error(err))
 		return
 	}

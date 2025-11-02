@@ -3,6 +3,7 @@ package utils
 import (
 	"sync"
 
+	"com.github.gscampanario/mambu-assessment-test/config"
 	"go.uber.org/zap"
 )
 
@@ -15,8 +16,14 @@ var (
 // creating a new one if not existent.
 func GetLogger() *zap.Logger {
 	once.Do(func() {
+		cfg := config.Get()
+
 		var err error
-		instance, err = zap.NewProduction()
+		if cfg.Env != "prod" {
+			instance, err = zap.NewDevelopment()
+		} else {
+			instance, err = zap.NewProduction()
+		}
 		if err != nil {
 			// returns a no-operation logger if production logger fails, avoiding unexpected panics
 			instance = zap.NewNop()
