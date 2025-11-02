@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"com.github.gscampanario/mambu-assessment-test/application/controller"
+	"com.github.gscampanario/mambu-assessment-test/application/watcher"
 	"com.github.gscampanario/mambu-assessment-test/utils"
 )
 
@@ -16,5 +17,7 @@ func main() {
 	defer utils.FlushLogger()
 
 	logger.Info("Application started")
+	go watcher.WatchBankTxnFeedback()
+	logger.Info("Exposing controller endpoints")
 	controller.Expose(ctx)
 }

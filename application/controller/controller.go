@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"com.github.gscampanario/mambu-assessment-test/application/dto/client"
+	"com.github.gscampanario/mambu-assessment-test/application/controller/middleware"
 	"com.github.gscampanario/mambu-assessment-test/application/dto/mapper"
+	"com.github.gscampanario/mambu-assessment-test/application/dto/transaction"
 	"com.github.gscampanario/mambu-assessment-test/config"
-	"com.github.gscampanario/mambu-assessment-test/domain/client/service"
+	txnService "com.github.gscampanario/mambu-assessment-test/domain/transaction/service"
+	"com.github.gscampanario/mambu-assessment-test/infrastructure/db"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -21,22 +23,29 @@ func Expose(ctx context.Context) {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	clientMapper := mapper.NewClientMapper()
-	clientService := service.NewClientService()
+	transactionRepository, err := db.NewTransactionRepository(cfg.Storage.DBFileLocation)
+	if err != nil {
+		logger.Error("[controller.Expose] Failed to create transaction repository", zap.Error(err))
+		panic(err)
+	}
+	defer transactionRepository.DB.Close()
+
+	transactionService := txnService.NewTransactionService(transactionRepository, cfg.Storage.BankFolder)
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "It works!"})
 	})
 
-	r.POST("/client", func(c *gin.Context) {
-		var dto client.InsertClientRequestDTO
+	authorized := r.Group("/transaction", middleware.BasicAuthMiddleware(cfg.Server.Auth.Username, cfg.Server.Auth.Password))
+	authorized.POST("/", func(c *gin.Context) {
+		var dto transaction.InsertTransactionRequestDTO
 		if err := c.ShouldBindJSON(&dto); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		ct := clientMapper.MapInsertClientRequestDTOToClient(dto)
-		if err := clientService.Insert(c.Request.Context(), ct); err != nil {
+		tx := mapper.MapInsertTxnRequestToTransactionModel(dto)
+		if err := transactionService.Insert(tx); err != nil {
 			// TODO: improve error handling with custom error types
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}

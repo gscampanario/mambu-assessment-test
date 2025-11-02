@@ -2,17 +2,26 @@ package config
 
 import (
 	"log"
-	"strings"
+	"os"
 	"sync"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
 	Server struct {
-		Port string `mapstructure:"port"`
-	} `mapstructure:"server"`
-	Env string `mapstructure:"env"`
+		Port string
+		Auth struct {
+			Username string
+			Password string
+		}
+	}
+	Env     string
+	Storage struct {
+		BankFolder        string
+		DBFileLocation    string
+		TxnFeedbackFolder string
+	}
 }
 
 var (
@@ -20,24 +29,40 @@ var (
 	once sync.Once
 )
 
-// Load loads information from config.yaml into a singleton, used for environment related parameters.
+// Load loads information from .env into a singleton, used for environment related parameters.
 func Load() {
 	once.Do(func() {
-		viper.SetConfigName("config")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(".")
-		viper.AutomaticEnv()
-		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-		viper.SetDefault("server.port", "8080")
-		viper.SetDefault("env", "dev")
-
-		if err := viper.ReadInConfig(); err != nil {
-			log.Printf("Config could not be loaded, please validate that config file is present")
+		if err := godotenv.Load(); err != nil {
+			log.Fatal("Error loading .env file")
 		}
 
-		if err := viper.Unmarshal(&cfg); err != nil {
-			panic(err)
+		cfg = &Config{
+			Server: struct {
+				Port string
+				Auth struct {
+					Username string
+					Password string
+				}
+			}{
+				Port: os.Getenv("SERVER_PORT"),
+				Auth: struct {
+					Username string
+					Password string
+				}{
+					Username: os.Getenv("BASIC_AUTH_USERNAME"),
+					Password: os.Getenv("BASIC_AUTH_PASSWORD"),
+				},
+			},
+			Env: os.Getenv("ENVIRONMENT"),
+			Storage: struct {
+				BankFolder        string
+				DBFileLocation    string
+				TxnFeedbackFolder string
+			}{
+				BankFolder:        os.Getenv("BANK_FOLDER"),
+				DBFileLocation:    os.Getenv("SQLITE_DB_FILE_LOCATION"),
+				TxnFeedbackFolder: os.Getenv("TXN_FBK_FOLDER"),
+			},
 		}
 	})
 }

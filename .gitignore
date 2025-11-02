@@ -31,3 +31,7 @@ go.work.sum
 .idea/
 .vscode/
 mock
+resources_dump
+**/*.sqlite
+**/*_documents.xml
+**/*_database.db
