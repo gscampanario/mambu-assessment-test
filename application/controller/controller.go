@@ -8,6 +8,7 @@ import (
 	"com.github.gscampanario/mambu-assessment-test/application/dto/client"
 	"com.github.gscampanario/mambu-assessment-test/application/dto/mapper"
 	"com.github.gscampanario/mambu-assessment-test/config"
+	"com.github.gscampanario/mambu-assessment-test/domain/client/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -21,6 +22,7 @@ func Expose(ctx context.Context) {
 	defer logger.Sync()
 
 	clientMapper := mapper.NewClientMapper()
+	clientService := service.NewClientService()
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "It works!"})
@@ -34,7 +36,7 @@ func Expose(ctx context.Context) {
 		}
 
 		ct := clientMapper.MapInsertClientRequestDTOToClient(dto)
-		if err := ct.Insert(c.Request.Context()); err != nil {
+		if err := clientService.Insert(c.Request.Context(), ct); err != nil {
 			// TODO: improve error handling with custom error types
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}

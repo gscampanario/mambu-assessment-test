@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"sync"
 
 	"com.github.gscampanario/mambu-assessment-test/utils"
@@ -8,7 +9,7 @@ import (
 
 // IClientRepository defines the interface for client database operations
 type IClientRepository interface {
-	Insert(client interface{}) error
+	Insert(ctx context.Context, client interface{}) error
 }
 
 type ClientRepository struct{}
@@ -34,7 +35,7 @@ func createClientRepository() {
 }
 
 // Insert inserts a new client into the database
-func (r *ClientRepository) Insert(client interface{}) error {
+func (r *ClientRepository) Insert(ctx context.Context, client interface{}) error {
 	// Placeholder for actual database insertion logic
 	logger := utils.GetLogger()
 	logger.Info("Inserting client into the database")

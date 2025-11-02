@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+	"strings"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -25,9 +27,13 @@ func Load() {
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(".")
 		viper.AutomaticEnv()
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+		viper.SetDefault("server.port", "8080")
+		viper.SetDefault("env", "dev")
 
 		if err := viper.ReadInConfig(); err != nil {
-			panic(err)
+			log.Printf("Config could not be loaded, please validate that config file is present")
 		}
 
 		if err := viper.Unmarshal(&cfg); err != nil {

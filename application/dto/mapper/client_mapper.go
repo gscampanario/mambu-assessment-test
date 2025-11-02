@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"com.github.gscampanario/mambu-assessment-test/application/dto/client"
-	models "com.github.gscampanario/mambu-assessment-test/domain/client"
+	models "com.github.gscampanario/mambu-assessment-test/domain/client/model"
 )
 
 type ClientMapper struct{}
